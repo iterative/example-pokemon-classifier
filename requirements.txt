@@ -1,2 +1,4 @@
 notebook
 dvc
+tensorflow-macos
+tensorflow-metal
