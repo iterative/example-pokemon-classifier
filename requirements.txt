@@ -3,3 +3,5 @@ dvc
 tensorflow-macos
 tensorflow-metal
 pandas
+pillow
+matplotlib
