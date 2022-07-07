@@ -5,3 +5,4 @@ tensorflow-metal
 pandas
 pillow
 matplotlib
+sklearn
