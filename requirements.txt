@@ -1,5 +1,5 @@
 notebook
-dvc
+dvc[gdrive]
 tensorflow-macos
 tensorflow-metal
 pandas
