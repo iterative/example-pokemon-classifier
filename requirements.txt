@@ -6,3 +6,5 @@ pandas
 pillow
 matplotlib
 sklearn
+papermill
+isort
