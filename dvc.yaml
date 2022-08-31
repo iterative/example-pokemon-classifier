@@ -1,0 +1,11 @@
+stages:
+  run_notebook:
+    cmd: papermill notebooks/pokemon_classifier.ipynb outputs/pokemon_classifier_out.ipynb
+    deps:
+      - notebooks/pokemon_classifier.ipynb
+      - data/external/images-gen-1-8
+      - data/external/stats/pokemon-gen-1-8.csv
+    outs:
+      - outputs/model.pckl
+      - outputs/confusion_matrix.png
+      - outputs/train_history.png
