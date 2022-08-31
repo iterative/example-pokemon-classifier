@@ -1,0 +1,1339 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "8ea2ee86",
+   "metadata": {
+    "papermill": {
+     "duration": 0.002223,
+     "end_time": "2022-08-30T15:13:24.130542",
+     "exception": false,
+     "start_time": "2022-08-30T15:13:24.128319",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "# Pokemon type classifier\n",
+    "\n",
+    "This project takes a dataset with Pokémon sprites and trains a CNN to classify whether a Pokémon belongs to a certain type (e.g. water: true or false). It is meant as a demo to show how DVC can be used in deep learning scenarios."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "9bb0a073",
+   "metadata": {
+    "papermill": {
+     "duration": 0.001607,
+     "end_time": "2022-08-30T15:13:24.133871",
+     "exception": false,
+     "start_time": "2022-08-30T15:13:24.132264",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "## Imports and parameters"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "04cb1f0e",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-08-30T15:13:24.138067Z",
+     "iopub.status.busy": "2022-08-30T15:13:24.137823Z",
+     "iopub.status.idle": "2022-08-30T15:13:26.562314Z",
+     "shell.execute_reply": "2022-08-30T15:13:26.561997Z"
+    },
+    "papermill": {
+     "duration": 2.428083,
+     "end_time": "2022-08-30T15:13:26.563496",
+     "exception": false,
+     "start_time": "2022-08-30T15:13:24.135413",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "import math\n",
+    "import os\n",
+    "import re\n",
+    "import shutil\n",
+    "from pathlib import Path\n",
+    "from typing import Optional\n",
+    "\n",
+    "import matplotlib.pyplot as plt\n",
+    "import numpy as np\n",
+    "import pandas as pd\n",
+    "import tensorflow as tf\n",
+    "from keras.layers import (Activation, BatchNormalization, Conv2D, Dense,\n",
+    "                          Dropout, Flatten, MaxPooling2D)\n",
+    "from keras.models import Sequential\n",
+    "from keras.preprocessing import image\n",
+    "from keras.utils import to_categorical\n",
+    "from sklearn.metrics import (ConfusionMatrixDisplay, classification_report,\n",
+    "                             confusion_matrix, log_loss)\n",
+    "from sklearn.model_selection import train_test_split\n",
+    "from tensorflow import keras\n",
+    "from tensorflow.keras import layers, regularizers\n",
+    "from tqdm import tqdm"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "832cd0f4",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-08-30T15:13:26.567594Z",
+     "iopub.status.busy": "2022-08-30T15:13:26.567337Z",
+     "iopub.status.idle": "2022-08-30T15:13:26.569581Z",
+     "shell.execute_reply": "2022-08-30T15:13:26.569295Z"
+    },
+    "papermill": {
+     "duration": 0.005367,
+     "end_time": "2022-08-30T15:13:26.570607",
+     "exception": false,
+     "start_time": "2022-08-30T15:13:26.565240",
+     "status": "completed"
+    },
+    "tags": [
+     "parameters"
+    ]
+   },
+   "outputs": [],
+   "source": [
+    "pokemon_type_train: str = \"Water\"\n",
+    "\n",
+    "train_data_images: str = \"images-gen-1-8\"\n",
+    "train_data_labels: str = \"pokemon-gen-1-8.csv\"\n",
+    "\n",
+    "model_test_size: float = 0.2\n",
+    "model_learning_rate: float = 0.001\n",
+    "model_epochs: int = 10\n",
+    "model_batch_size: int = 120"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "6effbb02",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-08-30T15:13:26.574326Z",
+     "iopub.status.busy": "2022-08-30T15:13:26.574117Z",
+     "iopub.status.idle": "2022-08-30T15:13:26.575978Z",
+     "shell.execute_reply": "2022-08-30T15:13:26.575661Z"
+    },
+    "papermill": {
+     "duration": 0.004766,
+     "end_time": "2022-08-30T15:13:26.576933",
+     "exception": false,
+     "start_time": "2022-08-30T15:13:26.572167",
+     "status": "completed"
+    },
+    "tags": [
+     "injected-parameters"
+    ]
+   },
+   "outputs": [],
+   "source": [
+    "# Parameters\n",
+    "epochs = 20\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "3189d179",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-08-30T15:13:26.581582Z",
+     "iopub.status.busy": "2022-08-30T15:13:26.581456Z",
+     "iopub.status.idle": "2022-08-30T15:13:26.583897Z",
+     "shell.execute_reply": "2022-08-30T15:13:26.583654Z"
+    },
+    "papermill": {
+     "duration": 0.005247,
+     "end_time": "2022-08-30T15:13:26.584731",
+     "exception": false,
+     "start_time": "2022-08-30T15:13:26.579484",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "def find_project_root() -> Optional[Path]:\n",
+    "    current = Path(\".\").resolve()\n",
+    "    \n",
+    "    while True:\n",
+    "        if (current / \".git\").exists():\n",
+    "            return current\n",
+    "        \n",
+    "        if current.parent == current:\n",
+    "            print(\"WARNING: No .git dir found\")\n",
+    "            return current\n",
+    "              \n",
+    "        current = current.parent\n",
+    "        \n",
+    "\n",
+    "PROJECT_ROOT = find_project_root()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "7cf2367b",
+   "metadata": {
+    "papermill": {
+     "duration": 0.001383,
+     "end_time": "2022-08-30T15:13:26.587519",
+     "exception": false,
+     "start_time": "2022-08-30T15:13:26.586136",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "## Data preprocessing"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "e0ac9358",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-08-30T15:13:26.606760Z",
+     "iopub.status.busy": "2022-08-30T15:13:26.606597Z",
+     "iopub.status.idle": "2022-08-30T15:13:26.675162Z",
+     "shell.execute_reply": "2022-08-30T15:13:26.674826Z"
+    },
+    "papermill": {
+     "duration": 0.071914,
+     "end_time": "2022-08-30T15:13:26.676373",
+     "exception": false,
+     "start_time": "2022-08-30T15:13:26.604459",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>pokedex_number</th>\n",
+       "      <th>name</th>\n",
+       "      <th>type1</th>\n",
+       "      <th>type2</th>\n",
+       "      <th>isWater</th>\n",
+       "      <th>isFighting</th>\n",
+       "      <th>isRock</th>\n",
+       "      <th>isIce</th>\n",
+       "      <th>isSteel</th>\n",
+       "      <th>isFlying</th>\n",
+       "      <th>...</th>\n",
+       "      <th>isNormal</th>\n",
+       "      <th>isGround</th>\n",
+       "      <th>isDragon</th>\n",
+       "      <th>isPoison</th>\n",
+       "      <th>isDark</th>\n",
+       "      <th>isGhost</th>\n",
+       "      <th>isFire</th>\n",
+       "      <th>isElectric</th>\n",
+       "      <th>isBug</th>\n",
+       "      <th>isPsychic</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>1</td>\n",
+       "      <td>Bulbasaur</td>\n",
+       "      <td>grass</td>\n",
+       "      <td>poison</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>...</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>2</td>\n",
+       "      <td>Ivysaur</td>\n",
+       "      <td>grass</td>\n",
+       "      <td>poison</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>...</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>3</td>\n",
+       "      <td>Venusaur</td>\n",
+       "      <td>grass</td>\n",
+       "      <td>poison</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>...</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>4</td>\n",
+       "      <td>Charmander</td>\n",
+       "      <td>fire</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>...</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>5</td>\n",
+       "      <td>Charmeleon</td>\n",
+       "      <td>fire</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>...</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "<p>5 rows × 22 columns</p>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "   pokedex_number        name  type1   type2  isWater  isFighting  isRock  \\\n",
+       "0               1   Bulbasaur  grass  poison        0           0       0   \n",
+       "1               2     Ivysaur  grass  poison        0           0       0   \n",
+       "2               3    Venusaur  grass  poison        0           0       0   \n",
+       "3               4  Charmander   fire     NaN        0           0       0   \n",
+       "4               5  Charmeleon   fire     NaN        0           0       0   \n",
+       "\n",
+       "   isIce  isSteel  isFlying  ...  isNormal  isGround  isDragon  isPoison  \\\n",
+       "0      0        0         0  ...         0         0         0         1   \n",
+       "1      0        0         0  ...         0         0         0         1   \n",
+       "2      0        0         0  ...         0         0         0         1   \n",
+       "3      0        0         0  ...         0         0         0         0   \n",
+       "4      0        0         0  ...         0         0         0         0   \n",
+       "\n",
+       "   isDark  isGhost  isFire  isElectric  isBug  isPsychic  \n",
+       "0       0        0       0           0      0          0  \n",
+       "1       0        0       0           0      0          0  \n",
+       "2       0        0       0           0      0          0  \n",
+       "3       0        0       1           0      0          0  \n",
+       "4       0        0       1           0      0          0  \n",
+       "\n",
+       "[5 rows x 22 columns]"
+      ]
+     },
+     "execution_count": 5,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# Process Pokémon and one-hot encode the types\n",
+    "\n",
+    "def preprocess_training_labels(dataset) -> pd.DataFrame:\n",
+    "    pokemon = pd.read_csv(PROJECT_ROOT / 'data/external/stats' / dataset)\n",
+    "    pokemon = pokemon[[\"pokedex_number\", \"name\", \"type1\", \"type2\"]]\n",
+    "\n",
+    "    # Create one-hot columns for each type\n",
+    "    types = set(pokemon[\"type1\"])\n",
+    "    for t in types:\n",
+    "        pokemon[\"is\" + str(t).capitalize()] = 0\n",
+    "\n",
+    "    # Iterate over Pokémon\n",
+    "    for i, p in pokemon.iterrows():\n",
+    "\n",
+    "        #  Set one-hot columns to 1 for relevant types\n",
+    "        pokemon.loc[i, \"is\" + p[\"type1\"].capitalize()] = 1\n",
+    "\n",
+    "        if not pd.isna(p[\"type2\"]):\n",
+    "            pokemon.loc[i, \"is\" + p[\"type2\"].capitalize()] = 1\n",
+    "            \n",
+    "    # Save output\n",
+    "    pokemon.to_csv(PROJECT_ROOT / 'data/processed/pokemon.csv', index=False)\n",
+    "            \n",
+    "    return(pokemon)\n",
+    "\n",
+    "pokemon = preprocess_training_labels(train_data_labels)\n",
+    "pokemon.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "43dbb2ca",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-08-30T15:13:26.680825Z",
+     "iopub.status.busy": "2022-08-30T15:13:26.680653Z",
+     "iopub.status.idle": "2022-08-30T15:13:27.219924Z",
+     "shell.execute_reply": "2022-08-30T15:13:27.219591Z"
+    },
+    "papermill": {
+     "duration": 0.542643,
+     "end_time": "2022-08-30T15:13:27.220932",
+     "exception": false,
+     "start_time": "2022-08-30T15:13:26.678289",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>pokedex_number</th>\n",
+       "      <th>name</th>\n",
+       "      <th>type1</th>\n",
+       "      <th>type2</th>\n",
+       "      <th>isWater</th>\n",
+       "      <th>isFighting</th>\n",
+       "      <th>isRock</th>\n",
+       "      <th>isIce</th>\n",
+       "      <th>isSteel</th>\n",
+       "      <th>isFlying</th>\n",
+       "      <th>...</th>\n",
+       "      <th>isGround</th>\n",
+       "      <th>isDragon</th>\n",
+       "      <th>isPoison</th>\n",
+       "      <th>isDark</th>\n",
+       "      <th>isGhost</th>\n",
+       "      <th>isFire</th>\n",
+       "      <th>isElectric</th>\n",
+       "      <th>isBug</th>\n",
+       "      <th>isPsychic</th>\n",
+       "      <th>imagePath</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>1</td>\n",
+       "      <td>Bulbasaur</td>\n",
+       "      <td>grass</td>\n",
+       "      <td>poison</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>...</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>/Users/robdewit/Documents/example-pokemon-clas...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>2</td>\n",
+       "      <td>Ivysaur</td>\n",
+       "      <td>grass</td>\n",
+       "      <td>poison</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>...</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>/Users/robdewit/Documents/example-pokemon-clas...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>3</td>\n",
+       "      <td>Venusaur</td>\n",
+       "      <td>grass</td>\n",
+       "      <td>poison</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>...</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>/Users/robdewit/Documents/example-pokemon-clas...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>4</td>\n",
+       "      <td>Charmander</td>\n",
+       "      <td>fire</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>...</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>/Users/robdewit/Documents/example-pokemon-clas...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>5</td>\n",
+       "      <td>Charmeleon</td>\n",
+       "      <td>fire</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>...</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>/Users/robdewit/Documents/example-pokemon-clas...</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "<p>5 rows × 23 columns</p>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "   pokedex_number        name  type1   type2  isWater  isFighting  isRock  \\\n",
+       "0               1   Bulbasaur  grass  poison        0           0       0   \n",
+       "1               2     Ivysaur  grass  poison        0           0       0   \n",
+       "2               3    Venusaur  grass  poison        0           0       0   \n",
+       "3               4  Charmander   fire     NaN        0           0       0   \n",
+       "4               5  Charmeleon   fire     NaN        0           0       0   \n",
+       "\n",
+       "   isIce  isSteel  isFlying  ...  isGround  isDragon  isPoison  isDark  \\\n",
+       "0      0        0         0  ...         0         0         1       0   \n",
+       "1      0        0         0  ...         0         0         1       0   \n",
+       "2      0        0         0  ...         0         0         1       0   \n",
+       "3      0        0         0  ...         0         0         0       0   \n",
+       "4      0        0         0  ...         0         0         0       0   \n",
+       "\n",
+       "   isGhost  isFire  isElectric  isBug  isPsychic  \\\n",
+       "0        0       0           0      0          0   \n",
+       "1        0       0           0      0          0   \n",
+       "2        0       0           0      0          0   \n",
+       "3        0       1           0      0          0   \n",
+       "4        0       1           0      0          0   \n",
+       "\n",
+       "                                           imagePath  \n",
+       "0  /Users/robdewit/Documents/example-pokemon-clas...  \n",
+       "1  /Users/robdewit/Documents/example-pokemon-clas...  \n",
+       "2  /Users/robdewit/Documents/example-pokemon-clas...  \n",
+       "3  /Users/robdewit/Documents/example-pokemon-clas...  \n",
+       "4  /Users/robdewit/Documents/example-pokemon-clas...  \n",
+       "\n",
+       "[5 rows x 23 columns]"
+      ]
+     },
+     "execution_count": 6,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# Process image data\n",
+    "\n",
+    "def preprocess_training_data(dataset) -> pd.DataFrame:\n",
+    "\n",
+    "    data_directory_images = PROJECT_ROOT / \"data/external\" / dataset\n",
+    "    output_directory = PROJECT_ROOT / \"data/processed/pokemon\"\n",
+    "\n",
+    "    pokemon = pd.read_csv(PROJECT_ROOT / 'data/processed/pokemon.csv')\n",
+    "    pokemon[\"imagePath\"] = np.nan\n",
+    "\n",
+    "    # Remove processed folder and create empty new one\n",
+    "    try:\n",
+    "        shutil.rmtree(output_directory)\n",
+    "        os.mkdir(output_directory)\n",
+    "    except:\n",
+    "        os.mkdir(output_directory)\n",
+    "\n",
+    "    # Copy images to processed folder\n",
+    "    for image in os.listdir(data_directory_images):\n",
+    "        pokemon_id = image.split('.')[0]\n",
+    "\n",
+    "        # Add leading zeroes to ID\n",
+    "        while len(pokemon_id) < 3:\n",
+    "            pokemon_id = \"0\" + pokemon_id\n",
+    "\n",
+    "        # Images with no variety (e.g. \"211.png\")\n",
+    "        if pokemon_id.isnumeric():\n",
+    "\n",
+    "            # Copy to processed folder\n",
+    "            src = data_directory_images / image\n",
+    "            dst = os.path.join(output_directory, pokemon_id + \".png\")\n",
+    "            shutil.copyfile(src, dst)\n",
+    "\n",
+    "            # Set image path in data frame\n",
+    "            pokemon.loc[pokemon[\"pokedex_number\"] == int(pokemon_id), 'imagePath'] = dst\n",
+    "\n",
+    "    # Drop Pokemon without image path\n",
+    "    pokemon = pokemon.dropna(subset=[\"imagePath\"])\n",
+    "    \n",
+    "    # Save pokemon.csv with image paths\n",
+    "    pokemon.to_csv(PROJECT_ROOT / 'data/processed/pokemon-with-image-paths.csv', index=False)\n",
+    "    \n",
+    "    return(pokemon)\n",
+    "\n",
+    "pokemon = preprocess_training_data(train_data_images)\n",
+    "pokemon.head()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "6d76e7fb",
+   "metadata": {
+    "papermill": {
+     "duration": 0.001968,
+     "end_time": "2022-08-30T15:13:27.224840",
+     "exception": false,
+     "start_time": "2022-08-30T15:13:27.222872",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "## Load training data and create split"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "fa9587d5",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-08-30T15:13:27.229480Z",
+     "iopub.status.busy": "2022-08-30T15:13:27.229321Z"
+    },
+    "papermill": {
+     "duration": 3.130756,
+     "end_time": "2022-08-30T15:13:30.357619",
+     "exception": false,
+     "start_time": "2022-08-30T15:13:27.226863",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "  0%|                                                                     | 0/801 [00:00<?, ?it/s]"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "  2%|█                                                          | 15/801 [00:00<00:05, 142.85it/s]"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "  4%|██▎                                                        | 31/801 [00:00<00:05, 150.99it/s]"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "  6%|███▍                                                       | 47/801 [00:00<00:04, 152.96it/s]"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      "  8%|████▋                                                      | 64/801 [00:00<00:04, 157.98it/s]"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 10%|█████▉                                                     | 81/801 [00:00<00:04, 161.11it/s]"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 12%|███████▏                                                   | 98/801 [00:00<00:04, 162.39it/s]"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 14%|████████▎                                                 | 115/801 [00:00<00:04, 161.25it/s]"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 16%|█████████▌                                                | 132/801 [00:00<00:04, 161.99it/s]"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 19%|██████████▊                                               | 149/801 [00:00<00:03, 163.89it/s]"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 21%|████████████                                              | 167/801 [00:01<00:03, 166.31it/s]"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 23%|█████████████▍                                            | 185/801 [00:01<00:03, 168.23it/s]"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 25%|██████████████▋                                           | 203/801 [00:01<00:03, 169.14it/s]"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 27%|███████████████▉                                          | 220/801 [00:01<00:03, 168.43it/s]"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 30%|█████████████████▏                                        | 237/801 [00:01<00:03, 168.39it/s]"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 32%|██████████████████▍                                       | 254/801 [00:01<00:03, 168.55it/s]"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 34%|███████████████████▋                                      | 272/801 [00:01<00:03, 170.55it/s]"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 36%|█████████████████████▏                                    | 292/801 [00:01<00:02, 177.56it/s]"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 39%|██████████████████████▍                                   | 310/801 [00:01<00:02, 176.25it/s]"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 41%|███████████████████████▊                                  | 329/801 [00:01<00:02, 178.65it/s]"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 43%|█████████████████████████▏                                | 347/801 [00:02<00:02, 178.82it/s]"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 46%|██████████████████████████▌                               | 366/801 [00:02<00:02, 179.88it/s]"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 48%|███████████████████████████▊                              | 384/801 [00:02<00:02, 179.66it/s]"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 50%|█████████████████████████████                             | 402/801 [00:02<00:02, 178.51it/s]"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 53%|██████████████████████████████▍                           | 421/801 [00:02<00:02, 179.13it/s]"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 55%|███████████████████████████████▊                          | 440/801 [00:02<00:01, 180.63it/s]"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 57%|█████████████████████████████████▏                        | 459/801 [00:02<00:01, 179.39it/s]"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 60%|██████████████████████████████████▌                       | 477/801 [00:02<00:01, 179.25it/s]"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 62%|███████████████████████████████████▊                      | 495/801 [00:02<00:01, 178.82it/s]"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 64%|█████████████████████████████████████▏                    | 513/801 [00:02<00:01, 178.26it/s]"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\r",
+      " 66%|██████████████████████████████████████▍                   | 531/801 [00:03<00:01, 177.32it/s]"
+     ]
+    }
+   ],
+   "source": [
+    "# Load images as training data\n",
+    "\n",
+    "def load_training_data(labels) -> np.array:\n",
+    "    train_image = []\n",
+    "\n",
+    "    for i in tqdm(range(labels.shape[0])):\n",
+    "\n",
+    "        img = tf.keras.utils.load_img(labels.iloc[i][\"imagePath\"], color_mode='rgba')\n",
+    "        img = tf.keras.utils.img_to_array(img)\n",
+    "        img = img/255\n",
+    "        train_image.append(img)\n",
+    "    X = np.array(train_image)\n",
+    "    \n",
+    "    return(X)\n",
+    "\n",
+    "X = load_training_data(pokemon)\n",
+    "X.shape\n",
+    "    \n",
+    "# Set dimensions for input sizes later on\n",
+    "model_image_size_x = len(X[1])\n",
+    "model_image_size_y = len(X[2])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "ce38d32d",
+   "metadata": {
+    "papermill": {
+     "duration": null,
+     "end_time": null,
+     "exception": null,
+     "start_time": null,
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Create labels\n",
+    "\n",
+    "def create_labels(labels):\n",
+    "    return(pokemon[[\"is\" + pokemon_type_train]])\n",
+    "\n",
+    "y = create_labels(pokemon)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "b86f832e",
+   "metadata": {
+    "papermill": {
+     "duration": null,
+     "end_time": null,
+     "exception": null,
+     "start_time": null,
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Train test split\n",
+    "\n",
+    "X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42, test_size=model_test_size, stratify=y)\n",
+    "\n",
+    "print(X_train.shape, y_train.shape)\n",
+    "print(X_test.shape, y_test.shape)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "dd36cbb4",
+   "metadata": {
+    "papermill": {
+     "duration": null,
+     "end_time": null,
+     "exception": null,
+     "start_time": null,
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "## Define model and train"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "d0d7e97c",
+   "metadata": {
+    "papermill": {
+     "duration": null,
+     "end_time": null,
+     "exception": null,
+     "start_time": null,
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "img_input = layers.Input(shape=(model_image_size_x, model_image_size_y, 4))\n",
+    "\n",
+    "model = Sequential()\n",
+    "\n",
+    "model.add(Conv2D(4, kernel_size=(5,5), activation='relu', kernel_regularizer=regularizers.l2(l=0.01), input_shape=(model_image_size_x, model_image_size_y, 4)))\n",
+    "model.add(MaxPooling2D(pool_size=(2, 2)))\n",
+    "\n",
+    "model.add(Dropout(0.2))\n",
+    "\n",
+    "model.add(Conv2D(4, kernel_size=(5,5), activation='relu', kernel_regularizer=regularizers.l2(l=0.01)))\n",
+    "model.add(MaxPooling2D(pool_size=(2, 2)))\n",
+    "\n",
+    "# model.add(Dropout(0.2))\n",
+    "\n",
+    "model.add(Dense(8, activation=\"relu\"))\n",
+    "\n",
+    "model.add(Dropout(0.2))\n",
+    "model.add(Flatten())\n",
+    "\n",
+    "model.add(Dense(1, activation=\"sigmoid\"))\n",
+    "\n",
+    "optimizer = keras.optimizers.Adam(learning_rate=model_learning_rate) #Adam, RMSprop or SGD\n",
+    "\n",
+    "model.compile(\n",
+    "    loss='binary_crossentropy'\n",
+    "    , optimizer=optimizer\n",
+    "    , metrics=[keras.metrics.AUC()]\n",
+    "#     , metrics=[keras.metrics.Recall()]\n",
+    ")\n",
+    "\n",
+    "model.summary()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "70e9a4b7",
+   "metadata": {
+    "papermill": {
+     "duration": null,
+     "end_time": null,
+     "exception": null,
+     "start_time": null,
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Now train the model\n",
+    "\n",
+    "def calculate_class_weights(y_train):\n",
+    "    ratio_true = sum(y_train[\"isWater\"] == 1) / len(y_train[\"isWater\"])\n",
+    "    ratio_false = sum(y_train[\"isWater\"] != 1) / len(y_train[\"isWater\"])\n",
+    "\n",
+    "    return {0: ratio_true, 1: ratio_false}\n",
+    "\n",
+    "\n",
+    "estimator = model.fit(X_train, y_train, \n",
+    "                      validation_data=(X_test, y_test),\n",
+    "                      class_weight= calculate_class_weights(y_train),\n",
+    "                      epochs=model_epochs, \n",
+    "                      batch_size=model_batch_size,\n",
+    "                      verbose=1)\n",
+    "\n",
+    "# Training history\n",
+    "plt.figure()\n",
+    "plt.ylabel('Loss / Accuracy')\n",
+    "plt.xlabel('Epoch')\n",
+    "\n",
+    "for k in estimator.history.keys():\n",
+    "    plt.plot(estimator.history[k], label = k) \n",
+    "plt.legend(loc='best')\n",
+    "plt.show()\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "72f3c9a0",
+   "metadata": {
+    "papermill": {
+     "duration": null,
+     "end_time": null,
+     "exception": null,
+     "start_time": null,
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "## Validation"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "5bda34ad",
+   "metadata": {
+    "papermill": {
+     "duration": null,
+     "end_time": null,
+     "exception": null,
+     "start_time": null,
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "def predict_pokemon(id: str, verbose=0):\n",
+    "    \n",
+    "    while len(id) < 3:\n",
+    "        id = \"0\" + id\n",
+    "    \n",
+    "    img = tf.keras.utils.load_img(f'{PROJECT_ROOT}/data/processed/pokemon/{id}.png', color_mode='rgba')\n",
+    "    img = tf.keras.utils.img_to_array(img)\n",
+    "    img = img/255\n",
+    "\n",
+    "\n",
+    "    classes = y\n",
+    "    proba = model.predict(img.reshape(1,475,475,4), verbose=verbose)\n",
+    "    \n",
+    "    plt.clf()\n",
+    "    plt.imshow(img)\n",
+    "    \n",
+    "    return proba[0][0]\n",
+    "\n",
+    "print(predict_pokemon(\"258\"))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "41d30b83",
+   "metadata": {
+    "papermill": {
+     "duration": null,
+     "end_time": null,
+     "exception": null,
+     "start_time": null,
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "predictions = model.predict(X) > 0.5\n",
+    "cm = confusion_matrix(y, predictions)\n",
+    "\n",
+    "disp = ConfusionMatrixDisplay(confusion_matrix=cm)\n",
+    "disp.plot()\n",
+    "plt.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "c960acc1",
+   "metadata": {
+    "papermill": {
+     "duration": null,
+     "end_time": null,
+     "exception": null,
+     "start_time": null,
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "*Attribution*:\n",
+    "\n",
+    "- https://github.com/benckx/dnn-movie-posters\n",
+    "- https://medium.com/m2mtechconnect/classifying-pok%C3%A9mon-images-with-machine-learning-79b9bc07c080\n",
+    "- https://www.kaggle.com/datasets/rounakbanik/pokemon"
+   ]
+  }
+ ],
+ "metadata": {
+  "celltoolbar": "Tags",
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.9.13"
+  },
+  "papermill": {
+   "default_parameters": {},
+   "duration": 7.343781,
+   "end_time": "2022-08-30T15:13:30.537142",
+   "environment_variables": {},
+   "exception": null,
+   "input_path": "notebooks/pokemon_classifier.ipynb",
+   "output_path": "output",
+   "parameters": {
+    "epochs": 20
+   },
+   "start_time": "2022-08-30T15:13:23.193361",
+   "version": "2.4.0"
+  },
+  "vscode": {
+   "interpreter": {
+    "hash": "adfa5400c33c3eb8ae0d2dbb26097a67da7859b6917822b382ea60a42be13f69"
+   }
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
