@@ -1,0 +1,25 @@
+schema: '2.0'
+stages:
+  run_notebook:
+    cmd: papermill notebooks/pokemon_classifier.ipynb outputs/pokemon_classifier_out.ipynb
+    deps:
+    - path: data/external/images-gen-1-8
+      md5: c48566c030889e71a791e1412d7dddf7.dir
+      size: 118179012
+      nfiles: 905
+    - path: data/external/stats/pokemon-gen-1-8.csv
+      md5: b0b029c2dc01bd0e6f2dbf9eeae8c14e
+      size: 160616
+    - path: notebooks/pokemon_classifier.ipynb
+      md5: 177ffe22a7333dac3e1b024bcd0160af
+      size: 102359
+    outs:
+    - path: outputs/confusion_matrix.png
+      md5: abe88a5030a35bc8476824ddbd9314b3
+      size: 16794
+    - path: outputs/model.pckl
+      md5: c145616d8566bca8d0e75c006129ef9e
+      size: 1516360
+    - path: outputs/train_history.png
+      md5: 7526cfe741683b7bb32c40551f6807cc
+      size: 39421
