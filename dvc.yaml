@@ -1,11 +1,28 @@
 stages:
   run_notebook:
-    cmd: papermill notebooks/pokemon_classifier.ipynb outputs/pokemon_classifier_out.ipynb
+    cmd: >
+      papermill
+      notebooks/pokemon_classifier.ipynb
+      outputs/pokemon_classifier_out.ipynb
+      -p SEED ${base.seed}
+      -p POKEMON_TYPE_TRAIN ${base.pokemon_type_train}
+      -p SOURCE_DIRECTORY ${data_preprocess.source_directory}
+      -p DESTINATION_DIRECTORY ${data_preprocess.destination_directory}
+      -p TRAIN_DATA_IMAGES ${data_preprocess.dataset_images}
+      -p TRAIN_DATA_LABELS ${data_preprocess.dataset_labels}
+      -p MODEL_TEST_SIZE ${train.test_size}
+      -p MODEL_LEARNING_RATE ${train.learning_rate}
+      -p MODEL_EPOCHS ${train.epochs}
+      -p MODEL_BATCH_SIZE ${train.batch_size}
     deps:
-      - notebooks/pokemon_classifier.ipynb
-      - data/external/images-gen-1-8
-      - data/external/stats/pokemon-gen-1-8.csv
+    - notebooks/pokemon_classifier.ipynb
+    - data/external/images-gen-1-8
+    - data/external/stats/pokemon-gen-1-8.csv
     outs:
-      - outputs/model.pckl
-      - outputs/confusion_matrix.png
-      - outputs/train_history.png
+    - outputs/model.pckl
+    - outputs/confusion_matrix.png
+    - outputs/train_history.png
+    params:
+    - base
+    - data_preprocess
+    - train

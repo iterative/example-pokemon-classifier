@@ -1,7 +1,11 @@
 schema: '2.0'
 stages:
   run_notebook:
-    cmd: papermill notebooks/pokemon_classifier.ipynb outputs/pokemon_classifier_out.ipynb
+    cmd: "papermill notebooks/pokemon_classifier.ipynb outputs/pokemon_classifier_out.ipynb\
+      \ -p SEED 42 -p POKEMON_TYPE_TRAIN Water -p SOURCE_DIRECTORY data/external -p\
+      \ DESTINATION_DIRECTORY data/processed -p TRAIN_DATA_IMAGES images-gen-1-8 -p\
+      \ TRAIN_DATA_LABELS stats/pokemon-gen-1-8.csv -p MODEL_TEST_SIZE 0.2 -p MODEL_LEARNING_RATE\
+      \ 0.001 -p MODEL_EPOCHS 15 -p MODEL_BATCH_SIZE 120\n"
     deps:
     - path: data/external/images-gen-1-8
       md5: c48566c030889e71a791e1412d7dddf7.dir
@@ -11,15 +15,30 @@ stages:
       md5: b0b029c2dc01bd0e6f2dbf9eeae8c14e
       size: 160616
     - path: notebooks/pokemon_classifier.ipynb
-      md5: 177ffe22a7333dac3e1b024bcd0160af
-      size: 102359
+      md5: f8066444d8d3735a390cdfb9ce836e4b
+      size: 109990
+    params:
+      params.yaml:
+        base:
+          seed: 42
+          pokemon_type_train: Water
+        data_preprocess:
+          source_directory: data/external
+          destination_directory: data/processed
+          dataset_labels: stats/pokemon-gen-1-8.csv
+          dataset_images: images-gen-1-8
+        train:
+          test_size: 0.2
+          learning_rate: 0.001
+          epochs: 15
+          batch_size: 120
     outs:
     - path: outputs/confusion_matrix.png
-      md5: abe88a5030a35bc8476824ddbd9314b3
-      size: 16794
+      md5: d6064c3abd3c7b8d5d4e2643dc94f178
+      size: 17297
     - path: outputs/model.pckl
-      md5: c145616d8566bca8d0e75c006129ef9e
-      size: 1516360
+      md5: 02fbbd58845c0a7a48a0e6aef43cb3a6
+      size: 1516550
     - path: outputs/train_history.png
-      md5: 7526cfe741683b7bb32c40551f6807cc
-      size: 39421
+      md5: 607a6b35c58475c599b6b1a8a5a29d4e
+      size: 42091
