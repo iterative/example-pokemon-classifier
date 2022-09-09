@@ -8,4 +8,4 @@ matplotlib
 sklearn
 papermill
 isort
-pickle
+pickle-mixin
