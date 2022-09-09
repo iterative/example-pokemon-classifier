@@ -2,6 +2,7 @@ stages:
   data_preprocess:
     cmd: python3 src/data_preprocess.py --params params.yaml
     deps:
+    - src/data_preprocess.py
     - data/external/images-gen-1-8
     - data/external/stats/pokemon-gen-1-8.csv
     outs:
@@ -10,6 +11,37 @@ stages:
     params:
     - base
     - data_preprocess
+  data_load:
+    cmd: python3 src/data_load.py --params params.yaml
+    deps:
+    - src/data_load.py
+    - data/processed/pokemon-with-image-paths.csv
+    - data/processed/pokemon
+    outs:
+    - data/processed/X.pckl
+    - data/processed/X_train.pckl
+    - data/processed/X_test.pckl
+    - data/processed/y.pckl
+    - data/processed/y_train.pckl
+    - data/processed/y_test.pckl
+    params:
+    - base
+    - data_preprocess
+  train:
+    cmd: python3 src/train.py --params params.yaml
+    deps:
+    - src/train.py
+    - data/processed/X_train.pckl
+    - data/processed/X_test.pckl
+    - data/processed/y_train.pckl
+    - data/processed/y_test.pckl
+    outs:
+    - outputs/model.pckl
+    - outputs/train_history.png
+    params:
+    - base
+    - data_preprocess
+    - train
   # run_notebook:
   #   cmd: >
   #     papermill
