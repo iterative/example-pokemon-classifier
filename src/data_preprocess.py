@@ -1,13 +1,14 @@
 import argparse
-import os
 import math
+import os
 import shutil
-import yaml
 
 import numpy as np
 import pandas as pd
+import yaml
 
 from utils.find_project_root import find_project_root
+
 
 # Process Pokémon and one-hot encode the types
 def preprocess_training_labels(dataset) -> pd.DataFrame:
