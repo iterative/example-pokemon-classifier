@@ -15,8 +15,8 @@ stages:
       md5: b0b029c2dc01bd0e6f2dbf9eeae8c14e
       size: 160616
     - path: notebooks/pokemon_classifier.ipynb
-      md5: f8066444d8d3735a390cdfb9ce836e4b
-      size: 109990
+      md5: 4d8ea1dd90346ee79979f2bb98cea602
+      size: 104701
     params:
       params.yaml:
         base:
@@ -34,11 +34,14 @@ stages:
           batch_size: 120
     outs:
     - path: outputs/confusion_matrix.png
-      md5: d6064c3abd3c7b8d5d4e2643dc94f178
-      size: 17297
+      md5: f0f7a6dbc2e8ece1d557255782c5ca3f
+      size: 17202
+    - path: outputs/metrics.yaml
+      md5: e58b37e2d577a0cdb62ff0a91960c4e5
+      size: 89
     - path: outputs/model.pckl
-      md5: 02fbbd58845c0a7a48a0e6aef43cb3a6
+      md5: 93113a754f6fa5ccbdb26c57a3f8537b
       size: 1516550
     - path: outputs/train_history.png
-      md5: 607a6b35c58475c599b6b1a8a5a29d4e
-      size: 42091
+      md5: 11b1d6dd86a09887ac7ee4744e3216c1
+      size: 43601

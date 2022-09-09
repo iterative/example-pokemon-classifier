@@ -22,6 +22,9 @@ stages:
     - outputs/model.pckl
     - outputs/confusion_matrix.png
     - outputs/train_history.png
+    metrics:
+    - outputs/metrics.yaml:
+        cache: false
     params:
     - base
     - data_preprocess
