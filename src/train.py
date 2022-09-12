@@ -83,7 +83,7 @@ def save_estimator(estimator):
     plt.show()
 
     # Save model itself
-    pickle.dump(estimator, open(PROJECT_ROOT / "outputs" / "model.pckl", "wb"))
+    model.save(PROJECT_ROOT / "outputs" / "model")
 
 if __name__ == '__main__':
 

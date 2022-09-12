@@ -1,50 +1,5 @@
 schema: '2.0'
 stages:
-  run_notebook:
-    cmd: "papermill notebooks/pokemon_classifier.ipynb outputs/pokemon_classifier_out.ipynb\
-      \ -p SEED 42 -p POKEMON_TYPE_TRAIN Water -p SOURCE_DIRECTORY data/external -p\
-      \ DESTINATION_DIRECTORY data/processed -p TRAIN_DATA_IMAGES images-gen-1-8 -p\
-      \ TRAIN_DATA_LABELS stats/pokemon-gen-1-8.csv -p MODEL_TEST_SIZE 0.2 -p MODEL_LEARNING_RATE\
-      \ 0.001 -p MODEL_EPOCHS 15 -p MODEL_BATCH_SIZE 120\n"
-    deps:
-    - path: data/external/images-gen-1-8
-      md5: c48566c030889e71a791e1412d7dddf7.dir
-      size: 118179012
-      nfiles: 905
-    - path: data/external/stats/pokemon-gen-1-8.csv
-      md5: b0b029c2dc01bd0e6f2dbf9eeae8c14e
-      size: 160616
-    - path: notebooks/pokemon_classifier.ipynb
-      md5: 4d8ea1dd90346ee79979f2bb98cea602
-      size: 104701
-    params:
-      params.yaml:
-        base:
-          seed: 42
-          pokemon_type_train: Water
-        data_preprocess:
-          source_directory: data/external
-          destination_directory: data/processed
-          dataset_labels: stats/pokemon-gen-1-8.csv
-          dataset_images: images-gen-1-8
-        train:
-          test_size: 0.2
-          learning_rate: 0.001
-          epochs: 15
-          batch_size: 120
-    outs:
-    - path: outputs/confusion_matrix.png
-      md5: f0f7a6dbc2e8ece1d557255782c5ca3f
-      size: 17202
-    - path: outputs/metrics.yaml
-      md5: e58b37e2d577a0cdb62ff0a91960c4e5
-      size: 89
-    - path: outputs/model.pckl
-      md5: 93113a754f6fa5ccbdb26c57a3f8537b
-      size: 1516550
-    - path: outputs/train_history.png
-      md5: 11b1d6dd86a09887ac7ee4744e3216c1
-      size: 43601
   data_preprocess:
     cmd: python3 src/data_preprocess.py --params params.yaml
     deps:
@@ -74,7 +29,7 @@ stages:
       size: 118179012
       nfiles: 905
     - path: data/processed/pokemon-with-image-paths.csv
-      md5: 56859d11f313cd7ebd6dc13369f8fff6
+      md5: c66213f9bb489fe7c9a2bd8b4b803c51
       size: 114333
   data_load:
     cmd: python3 src/data_load.py --params params.yaml
@@ -84,11 +39,11 @@ stages:
       size: 118179012
       nfiles: 905
     - path: data/processed/pokemon-with-image-paths.csv
-      md5: 56859d11f313cd7ebd6dc13369f8fff6
+      md5: c66213f9bb489fe7c9a2bd8b4b803c51
       size: 114333
     - path: src/data_load.py
-      md5: e11b020d0672f2f65fe64c236227df56
-      size: 2072
+      md5: 3beae88ab58ae0cb8d355477e04f3574
+      size: 2073
     params:
       params.yaml:
         base:
@@ -118,3 +73,70 @@ stages:
     - path: data/processed/y_train.pckl
       md5: 25b4a8bb684e918396014650bfcfeffd
       size: 10913
+  train:
+    cmd: python3 src/train.py --params params.yaml
+    deps:
+    - path: data/processed/X_test.pckl
+      md5: 23c3aa551e6826615b71e592972997a8
+      size: 581210168
+    - path: data/processed/X_train.pckl
+      md5: 364b2c4e8fe73f88a79ef5da6416abac
+      size: 2310400169
+    - path: data/processed/y_test.pckl
+      md5: 05695e9b10f3c84048b6c6d0af01bd30
+      size: 3247
+    - path: data/processed/y_train.pckl
+      md5: 25b4a8bb684e918396014650bfcfeffd
+      size: 10913
+    - path: src/train.py
+      md5: 17905a4f0f19a3513fe0c1d18f6c320a
+      size: 4100
+    params:
+      params.yaml:
+        base:
+          seed: 42
+          pokemon_type_train: Water
+        data_preprocess:
+          source_directory: data/external
+          destination_directory: data/processed
+          dataset_labels: stats/pokemon-gen-1-8.csv
+          dataset_images: images-gen-1-8
+        train:
+          test_size: 0.2
+          learning_rate: 0.001
+          epochs: 15
+          batch_size: 120
+    outs:
+    - path: outputs/model/keras_metadata.pb
+      md5: c7f12fbd11650bd6ea7c3fdd7b53e8f4
+      size: 17311
+    - path: outputs/model/saved_model.pb
+      md5: de5ed7df9f7e78383e03bbd06e6ff882
+      size: 194467
+    - path: outputs/train_history.png
+      md5: 666fd719834847b0913dd7e1dd0ee393
+      size: 50507
+  evaluate:
+    cmd: python3 src/evaluate.py --params params.yaml
+    deps:
+    - path: outputs/model/keras_metadata.pb
+      md5: c7f12fbd11650bd6ea7c3fdd7b53e8f4
+      size: 17311
+    - path: outputs/model/saved_model.pb
+      md5: de5ed7df9f7e78383e03bbd06e6ff882
+      size: 194467
+    - path: outputs/train_history.png
+      md5: 666fd719834847b0913dd7e1dd0ee393
+      size: 50507
+    params:
+      params.yaml:
+        base:
+          seed: 42
+          pokemon_type_train: Water
+    outs:
+    - path: outputs/confusion_matrix.png
+      md5: 7e42513902141f0e9c1988baaf5b1630
+      size: 22718
+    - path: outputs/metrics.yaml
+      md5: fb7d1ffbd9b381a1685a13ec8f7a33cf
+      size: 103

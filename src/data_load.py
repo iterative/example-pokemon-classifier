@@ -10,6 +10,7 @@ from tqdm import tqdm
 
 from utils.find_project_root import find_project_root
 
+
 # Load training images
 def load_training_data(labels) -> np.array:
     train_image = []
