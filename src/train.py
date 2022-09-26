@@ -80,7 +80,6 @@ def save_estimator(estimator):
     plt.legend(loc='best')
 
     plt.savefig(PROJECT_ROOT / "outputs" / "train_history.png", dpi=150, bbox_inches='tight', pad_inches=0)
-    plt.show()
 
     # Save model itself
     model.save(PROJECT_ROOT / "outputs" / "model")
