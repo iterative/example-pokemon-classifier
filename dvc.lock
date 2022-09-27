@@ -34,14 +34,14 @@ stages:
           batch_size: 120
     outs:
     - path: outputs/confusion_matrix.png
-      md5: f0f7a6dbc2e8ece1d557255782c5ca3f
-      size: 17202
+      md5: 0b917e876107f5e845751ab8870d1fdf
+      size: 17488
     - path: outputs/metrics.yaml
-      md5: e58b37e2d577a0cdb62ff0a91960c4e5
-      size: 89
+      md5: e8c8b73105fbcfdb08f016c15235f8ae
+      size: 104
     - path: outputs/model.pckl
-      md5: 93113a754f6fa5ccbdb26c57a3f8537b
+      md5: 59fcee303b893c78c884a96d68e41944
       size: 1516550
     - path: outputs/train_history.png
-      md5: 11b1d6dd86a09887ac7ee4744e3216c1
-      size: 43601
+      md5: 72968581cbd4818392532393e0aad5ec
+      size: 43138
