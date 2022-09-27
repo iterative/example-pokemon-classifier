@@ -50,7 +50,9 @@ stages:
     - outputs/model/saved_model.pb
     - outputs/train_history.png
     outs:
-    - outputs/metrics.yaml
     - outputs/confusion_matrix.png
     params:
     - base
+    metrics:
+    - outputs/metrics.yaml:
+        cache: false
