@@ -1,4 +1,4 @@
 [core]
-    remote = gdrive
-['remote "gdrive"']
-    url = gdrive://1WRnCJzZhPRdtoM9Y3XtrGpIotqTy-UXZ
+    remote = s3
+['remote "s3"']
+    url = s3://rob-pokemon-classifier

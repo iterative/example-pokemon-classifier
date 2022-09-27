@@ -1,8 +1,11 @@
 notebook
-dvc[gdrive]
+dvc[s3]
 tensorflow-macos
 tensorflow-metal
 pandas
 pillow
 matplotlib
 sklearn
+papermill
+isort
+pickle-mixin
