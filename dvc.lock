@@ -110,15 +110,13 @@ stages:
           epochs: 15
           batch_size: 120
     outs:
-    - path: outputs/model/keras_metadata.pb
-      md5: c7f12fbd11650bd6ea7c3fdd7b53e8f4
-      size: 17311
-    - path: outputs/model/saved_model.pb
-      md5: de5ed7df9f7e78383e03bbd06e6ff882
-      size: 194467
+    - path: outputs/model
+      md5: bb9347bd95f57b0024b051a77728fd23.dir
+      size: 1507711
+      nfiles: 4
     - path: outputs/train_history.png
-      md5: 5e27c8d18cb0e03a34f325172686a100
-      size: 52069
+      md5: 8ad98617c7bca9b3a5adfc754a553365
+      size: 50476
   evaluate:
     cmd: python3 src/evaluate.py --params params.yaml
     deps:
@@ -129,8 +127,8 @@ stages:
       md5: de5ed7df9f7e78383e03bbd06e6ff882
       size: 194467
     - path: outputs/train_history.png
-      md5: 5e27c8d18cb0e03a34f325172686a100
-      size: 52069
+      md5: 8ad98617c7bca9b3a5adfc754a553365
+      size: 50476
     params:
       params.yaml:
         base:
@@ -138,8 +136,8 @@ stages:
           pokemon_type_train: Water
     outs:
     - path: outputs/confusion_matrix.png
-      md5: 36faa6b518da5812fe6bca05591a5dd2
-      size: 22449
+      md5: 28be5f11bd7bd99093f525b704d08ea4
+      size: 22184
     - path: outputs/metrics.yaml
-      md5: cb525255402d0e46e4d91655850ceda4
+      md5: f102b8baf582402c9966864bc6f1684e
       size: 103

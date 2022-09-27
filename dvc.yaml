@@ -37,8 +37,7 @@ stages:
     - data/processed/y_train.pckl
     - data/processed/y_test.pckl
     outs:
-    - outputs/model/keras_metadata.pb
-    - outputs/model/saved_model.pb
+    - outputs/model
     - outputs/train_history.png
     params:
     - base
