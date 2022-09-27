@@ -29,8 +29,11 @@ stages:
       size: 118179012
       nfiles: 905
     - path: data/processed/pokemon-with-image-paths.csv
-      md5: c66213f9bb489fe7c9a2bd8b4b803c51
+      md5: 7020d2b7ad1b2ee7c2cc3285c7e472ef
       size: 114333
+    - path: data/processed/pokemon.csv
+      md5: 01120e534796a4006fdfa92c699234b5
+      size: 47039
   data_load:
     cmd: python3 src/data_load.py --params params.yaml
     deps:
@@ -39,7 +42,7 @@ stages:
       size: 118179012
       nfiles: 905
     - path: data/processed/pokemon-with-image-paths.csv
-      md5: c66213f9bb489fe7c9a2bd8b4b803c51
+      md5: 7020d2b7ad1b2ee7c2cc3285c7e472ef
       size: 114333
     - path: src/data_load.py
       md5: 3beae88ab58ae0cb8d355477e04f3574
@@ -89,8 +92,8 @@ stages:
       md5: 25b4a8bb684e918396014650bfcfeffd
       size: 10913
     - path: src/train.py
-      md5: 17905a4f0f19a3513fe0c1d18f6c320a
-      size: 4100
+      md5: bf934d6c1c816835fb84b3e1e121a5e2
+      size: 4085
     params:
       params.yaml:
         base:
@@ -114,8 +117,8 @@ stages:
       md5: de5ed7df9f7e78383e03bbd06e6ff882
       size: 194467
     - path: outputs/train_history.png
-      md5: 666fd719834847b0913dd7e1dd0ee393
-      size: 50507
+      md5: 5e27c8d18cb0e03a34f325172686a100
+      size: 52069
   evaluate:
     cmd: python3 src/evaluate.py --params params.yaml
     deps:
@@ -126,8 +129,8 @@ stages:
       md5: de5ed7df9f7e78383e03bbd06e6ff882
       size: 194467
     - path: outputs/train_history.png
-      md5: 666fd719834847b0913dd7e1dd0ee393
-      size: 50507
+      md5: 5e27c8d18cb0e03a34f325172686a100
+      size: 52069
     params:
       params.yaml:
         base:
@@ -135,8 +138,8 @@ stages:
           pokemon_type_train: Water
     outs:
     - path: outputs/confusion_matrix.png
-      md5: 7e42513902141f0e9c1988baaf5b1630
-      size: 22718
+      md5: 36faa6b518da5812fe6bca05591a5dd2
+      size: 22449
     - path: outputs/metrics.yaml
-      md5: fb7d1ffbd9b381a1685a13ec8f7a33cf
+      md5: cb525255402d0e46e4d91655850ceda4
       size: 103

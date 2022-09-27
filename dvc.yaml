@@ -6,6 +6,7 @@ stages:
     - data/external/images-gen-1-8
     - data/external/stats/pokemon-gen-1-8.csv
     outs:
+    - data/processed/pokemon.csv
     - data/processed/pokemon-with-image-paths.csv
     - data/processed/pokemon
     params:
