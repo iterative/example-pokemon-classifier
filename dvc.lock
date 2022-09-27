@@ -38,20 +38,20 @@ stages:
       size: 118179012
       nfiles: 905
     - path: data/processed/pokemon-with-image-paths.csv
-      md5: 26518e93e5afb849ec3d579206f0c1b5
+      md5: 7c0e04918d9bc21c6db5b06b2ff51dd8
       size: 114333
     - path: data/processed/pokemon.csv
-      md5: 0608616b308b627476eae186490f0fd8
+      md5: 9f8af68874a93a6eae8045e6f37faedd
       size: 47039
     - path: outputs/confusion_matrix.png
-      md5: 5107e5e7f3e6bb14711ddc63608ccaf4
-      size: 17124
+      md5: 06eb4a0c74317ad54c18475de7921d6f
+      size: 22700
     - path: outputs/metrics.yaml
-      md5: cb525255402d0e46e4d91655850ceda4
+      md5: 3e9cb8a1811c3336c01b2879e552ca25
       size: 103
     - path: outputs/model.pckl
-      md5: 3842454c31a104bc2b3bd4d9d2f00a43
+      md5: e65c5695d5f1e068dfe53156cd61f430
       size: 1516550
     - path: outputs/train_history.png
-      md5: a04554373f9ada28641a59b67a0a73b0
-      size: 45387
+      md5: 6b01e8afb297db04c7e957c09aa88517
+      size: 55872
