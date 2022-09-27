@@ -33,15 +33,25 @@ stages:
           epochs: 15
           batch_size: 120
     outs:
+    - path: data/processed/pokemon
+      md5: c48566c030889e71a791e1412d7dddf7.dir
+      size: 118179012
+      nfiles: 905
+    - path: data/processed/pokemon-with-image-paths.csv
+      md5: 26518e93e5afb849ec3d579206f0c1b5
+      size: 114333
+    - path: data/processed/pokemon.csv
+      md5: 0608616b308b627476eae186490f0fd8
+      size: 47039
     - path: outputs/confusion_matrix.png
-      md5: 0b917e876107f5e845751ab8870d1fdf
-      size: 17488
+      md5: 5107e5e7f3e6bb14711ddc63608ccaf4
+      size: 17124
     - path: outputs/metrics.yaml
-      md5: e8c8b73105fbcfdb08f016c15235f8ae
-      size: 104
+      md5: cb525255402d0e46e4d91655850ceda4
+      size: 103
     - path: outputs/model.pckl
-      md5: 59fcee303b893c78c884a96d68e41944
+      md5: 3842454c31a104bc2b3bd4d9d2f00a43
       size: 1516550
     - path: outputs/train_history.png
-      md5: 72968581cbd4818392532393e0aad5ec
-      size: 43138
+      md5: a04554373f9ada28641a59b67a0a73b0
+      size: 45387
