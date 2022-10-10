@@ -15,18 +15,9 @@ def preprocess_training_labels(dataset) -> pd.DataFrame:
     pokemon = pokemon[["pokedex_number", "name", "type1", "type2"]]
 
     # Create one-hot columns for each type
-    types = set(pokemon["type1"])
-    for t in types:
-        pokemon["is" + str(t).capitalize()] = 0
-
-    # Iterate over Pokémon
-    for i, p in pokemon.iterrows():
-
-        #  Set one-hot columns to 1 for relevant types
-        pokemon.loc[i, "is" + p["type1"].capitalize()] = 1
-
-        if not pd.isna(p["type2"]):
-            pokemon.loc[i, "is" + p["type2"].capitalize()] = 1
+    df_one_hot = pd.get_dummies(pokemon.type1.str.capitalize(), prefix='is', prefix_sep='')+pd.get_dummies(pokemon.type2.str.capitalize(), prefix='is', prefix_sep='')
+    df_one_hot = df_one_hot.clip(0, 1)
+    pokemon = pd.merge(pokemon, df_one_hot, left_index=True, right_index=True)
             
     # Save output
     pokemon.to_csv(PROJECT_ROOT / DESTINATION_DIRECTORY / 'pokemon.csv', index=False)            
@@ -53,8 +44,7 @@ def preprocess_training_data(dataset) -> pd.DataFrame:
         pokemon_id = image.split('.')[0]
 
         # Add leading zeroes to ID
-        while len(pokemon_id) < 3:
-            pokemon_id = "0" + pokemon_id
+        pokemon_id = pokemon_id.zfill(3)
 
         # Images with no variety (e.g. "211.png")
         if pokemon_id.isnumeric():
@@ -64,8 +54,8 @@ def preprocess_training_data(dataset) -> pd.DataFrame:
             dst = os.path.join(output_directory, pokemon_id + ".png")
             shutil.copyfile(src, dst)
 
-            # Set image path in data frame
-            pokemon.loc[pokemon["pokedex_number"] == int(pokemon_id), 'imagePath'] = dst
+    # Set image path in data frame
+    pokemon['imagePath'] = pokemon['pokedex_number'].apply(lambda x: os.path.join(output_directory, str(x).zfill(3) + '.png'))
 
     # Drop Pokemon without image path
     pokemon = pokemon.dropna(subset=["imagePath"])
