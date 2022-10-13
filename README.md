@@ -20,6 +20,7 @@ different branches, you can find three stages in this process:
 - `dvc-pipeline`: pure DVC pipeline with Python modules
 
 # How to run
+
 1. Create a new virtual environment with `virtualenv -p python3 .venv`
 2. Activate the virtual environment with `source .venv/bin/activate`
 3. Install the dependencies with `pip install -r requirements.txt`
@@ -28,4 +29,14 @@ different branches, you can find three stages in this process:
     https://www.kaggle.com/datasets/robdewit/pokemon-images
   - `data/external/stats/pokemon-gen-1-8.csv`:
     https://www.kaggle.com/datasets/rounakbanik/pokemon
-5. Launch the Notebook with `jupyter-notebook`
+5. Initialize DVC with `dvc init`
+6. Start versioning the contents of the `data` directory with `dvc add data`
+7. Launch the Notebook with `jupyter-notebook`
+
+# Notes on hardware
+
+The requirements specify `tensorflow-macos` and `tensorflow-metal`, which are
+the appropriate requirements when you are using a Mac with an M1 CPU or later.
+In case you are using a different system, you will need to replace these with
+`tensorflow`.
+
