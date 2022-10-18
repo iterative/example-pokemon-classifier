@@ -17,7 +17,8 @@ different branches, you can find three stages in this process:
 - `snapshot-jupyter`: a prototype as you might build it in a Jupyter Notebook
 - `papermill-dvc`: a DVC pipeline with a single stage to run a parameterized
   notebook using [Papermill](https://papermill.readthedocs.io/)
-- `dvc-pipeline`: pure DVC pipeline with Python modules
+- [`dvc-pipeline`](https://github.com/iterative/example-pokemon-classifier/tree/dvc-pipeline):
+  pure DVC pipeline with Python modules
 
 ## Requiremets
 
