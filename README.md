@@ -14,8 +14,10 @@ salt._
 This project details the transformation from Notebook to DVC pipeline. In the
 different branches, you can find three stages in this process:
 
-- `snapshot-jupyter`: a prototype as you might build it in a Jupyter Notebook
-- `papermill-dvc`: a DVC pipeline with a single stage to run a parameterized
+- [`snapshot-jupyter`](https://github.com/iterative/example-pokemon-classifier/tree/snapshot-jupyter):
+  a prototype as you might build it in a Jupyter Notebook
+- [`papermill-dvc`](https://github.com/iterative/example-pokemon-classifier/tree/papermill-dvc):
+  a DVC pipeline with a single stage to run a parameterized
   notebook using [Papermill](https://papermill.readthedocs.io/)
 - [`dvc-pipeline`](https://github.com/iterative/example-pokemon-classifier/tree/dvc-pipeline):
   pure DVC pipeline with Python modules
