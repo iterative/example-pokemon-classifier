@@ -1,4 +1,4 @@
-# Jupyter Notebook for Pokémon type classifier 
+# Single stage DVC pipeline for Pokémon type classifier 
 
 This DVC pipeline has a single stage that uses
 [Papermill](https://papermill.readthedocs.io/en/latest/) to train a CNN to
