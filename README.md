@@ -24,7 +24,7 @@ different branches, you can find three stages in this process:
 
 ## Requirements
 
-- [Python >= 3.9.13](https://www.python.org/downloads/
+- [Python >= 3.9.13](https://www.python.org/downloads/)
 - [Virtualenv >= 20.14.1](https://virtualenv.pypa.io/en/latest/installation.html)
 
 ## How to run
