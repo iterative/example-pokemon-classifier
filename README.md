@@ -22,12 +22,10 @@ different branches, you can find three stages in this process:
 - [`dvc-pipeline`](https://github.com/iterative/example-pokemon-classifier/tree/dvc-pipeline):
   pure DVC pipeline with Python modules
 
-## Requiremets
+## Requirements
 
-- [Python](https://www.python.org/downloads/
-- [Virtualenv](https://virtualenv.pypa.io/en/latest/installation.html)
-- [DVC](https://dvc.org/doc/install)
-- [Jupyter](https://jupyter.org/install)
+- [Python >= 3.9.13](https://www.python.org/downloads/
+- [Virtualenv >= 20.14.1](https://virtualenv.pypa.io/en/latest/installation.html)
 
 ## How to run
 
