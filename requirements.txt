@@ -5,7 +5,7 @@ tensorflow-metal
 pandas
 pillow
 matplotlib
-sklearn
+scikit-learn
 papermill
 isort
 pickle-mixin
